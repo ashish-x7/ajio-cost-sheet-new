@@ -1145,7 +1145,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
       }}
     }}
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
 <body>
   <main class="shell">
@@ -1704,13 +1704,13 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         exportPopup.classList.remove('open');
       }}
 
-      function exportExcel() {{
+      async function exportExcel() {{
         if (!tableData.length) {{
           closeExportPopup();
           return;
         }}
 
-        if (typeof XLSX === 'undefined') {{
+        if (typeof ExcelJS === 'undefined') {{
           alert('Excel library load nahi hui. Please page refresh karke try karein.');
           return;
         }}
@@ -1722,9 +1722,18 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         confirmExportBtn.textContent = 'Preparing...';
 
         try {{
-          // Build worksheet AOA: header row + data rows
-          const aoa = [exportHeaders, ...rows.map(row => {{
-            return row.map(cell => {{
+          // ── 1. Create workbook & worksheet with freeze top row ──
+          const workbook = new ExcelJS.Workbook();
+          const ws = workbook.addWorksheet('AJIO Export', {{
+            views: [{{ state: 'frozen', ySplit: 1 }}]
+          }});
+
+          // ── 2. Add header row ──
+          ws.addRow(exportHeaders);
+
+          // ── 3. Add data rows with clean numeric values ──
+          rows.forEach(row => {{
+            const processedRow = row.map(cell => {{
               if (cell === null || cell === undefined || cell === '') return '';
               const s = String(cell).trim();
               if (s.endsWith('%')) {{
@@ -1735,17 +1744,11 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
               if (cleaned !== '' && !isNaN(Number(cleaned))) return Number(cleaned);
               return s;
             }});
-          }})];
+            ws.addRow(processedRow);
+          }});
 
-          const ws = XLSX.utils.aoa_to_sheet(aoa);
-          const numCols = exportHeaders.length;
-          const numRows  = aoa.length;
-
-          // ── 1. Freeze top row ──
-          ws['!views'] = [{{ state: 'frozen', ySplit: 1 }}];
-
-          // ── 2. Column widths ──
-          ws['!cols'] = exportHeaders.map((h, i) => {{
+          // ── 4. Set column widths ──
+          exportHeaders.forEach((h, i) => {{
             let max = String(h || '').length + 3;
             rows.forEach(r => {{
               const v = String(r[i] || '');
@@ -1754,56 +1757,82 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
                 : Math.min(Math.max(v.length + 3, 12), 28);
               if (w > max) max = w;
             }});
-            return {{ wch: Math.max(max, 12) }};
+            ws.getColumn(i + 1).width = Math.max(max, 12);
           }});
 
-          // ── 3. Header row height ──
-          ws['!rows'] = [{{ hpx: 20 }}];
+          // ── 5. Style the header row (colors + borders + font + alignment) ──
+          const headerRow = ws.getRow(1);
+          headerRow.height = 20;
 
-          // ── 4. Style definitions ──
-          const redFill    = {{ patternType: 'solid', fgColor: {{ rgb: 'FDE2E2' }}, bgColor: {{ indexed: 64 }} }};
-          const yellowFill = {{ patternType: 'solid', fgColor: {{ rgb: 'FFF4BF' }}, bgColor: {{ indexed: 64 }} }};
-          const greenFill  = {{ patternType: 'solid', fgColor: {{ rgb: 'DDF6E4' }}, bgColor: {{ indexed: 64 }} }};
+          const redFill = {{
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: {{ argb: 'FFFDE2E2' }}
+          }};
+          const yellowFill = {{
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: {{ argb: 'FFFFFF4B' }}
+          }};
+          const greenFill = {{
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: {{ argb: 'FFDDF6E4' }}
+          }};
           const thinBorder = {{
-            top:    {{ style: 'thin', color: {{ rgb: '000000' }} }},
-            bottom: {{ style: 'thin', color: {{ rgb: '000000' }} }},
-            left:   {{ style: 'thin', color: {{ rgb: '000000' }} }},
-            right:  {{ style: 'thin', color: {{ rgb: '000000' }} }},
+            top:    {{ style: 'thin', color: {{ argb: 'FF000000' }} }},
+            bottom: {{ style: 'thin', color: {{ argb: 'FF000000' }} }},
+            left:   {{ style: 'thin', color: {{ argb: 'FF000000' }} }},
+            right:  {{ style: 'thin', color: {{ argb: 'FF000000' }} }}
           }};
 
-          // ── 5. Apply header styles (color + border + font + alignment) ──
-          for (let C = 0; C < numCols; C++) {{
-            const addr = XLSX.utils.encode_cell({{ r: 0, c: C }});
-            if (!ws[addr]) ws[addr] = {{ t: 's', v: exportHeaders[C] || '' }};
-            const fill = C < 25 ? redFill : C === 25 ? yellowFill : greenFill;
-            ws[addr].s = {{
-              fill,
-              font:      {{ bold: true, name: 'Calibri', sz: 11 }},
-              alignment: {{ horizontal: 'center', vertical: 'center', wrapText: false }},
-              border:    thinBorder,
+          for (let C = 1; C <= exportHeaders.length; C++) {{
+            const cell = headerRow.getCell(C);
+            const fill = C <= 25 ? redFill : C === 26 ? yellowFill : greenFill;
+            cell.fill = fill;
+            cell.border = thinBorder;
+            cell.font = {{
+              name: 'Calibri',
+              size: 11,
+              bold: true,
+              color: {{ argb: 'FF000000' }}
+            }};
+            cell.alignment = {{
+              horizontal: 'center',
+              vertical: 'middle',
+              wrapText: false
             }};
           }}
 
-          // ── 6. Apply % number format to data cells that were % strings ──
-          for (let R = 1; R < numRows; R++) {{
-            for (let C = 0; C < numCols; C++) {{
-              const addr = XLSX.utils.encode_cell({{ r: R, c: C }});
-              if (!ws[addr]) continue;
-              const cell    = ws[addr];
-              const origStr = String(rows[R - 1][C] || '').trim();
-              if (cell.t === 'n' && origStr.endsWith('%')) {{
-                cell.z = '0%';
+          // ── 6. Apply % format to cell values that were percentages ──
+          for (let R = 2; R <= rows.length + 1; R++) {{
+            const dataRow = ws.getRow(R);
+            for (let C = 1; C <= exportHeaders.length; C++) {{
+              const cell = dataRow.getCell(C);
+              const origVal = rows[R - 2][C - 1];
+              const origStr = String(origVal || '').trim();
+              if (origStr.endsWith('%')) {{
+                cell.numFmt = '0%';
               }}
             }}
           }}
 
-          // ── 7. Write & download ──
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, 'AJIO Export');
-          XLSX.writeFile(wb, safeName + '.xlsx');
+          // ── 7. Generate file & download ──
+          const buffer = await workbook.xlsx.writeBuffer();
+          const blob = new Blob([buffer], {{ type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = safeName + '.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
           closeExportPopup();
 
         }} catch (err) {{
+          console.error(err);
           alert('Export failed: ' + (err.message || 'Unknown error'));
         }} finally {{
           confirmExportBtn.disabled = false;
