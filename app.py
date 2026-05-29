@@ -1145,6 +1145,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
       }}
     }}
   </style>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <main class="shell">
@@ -1703,50 +1704,111 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         exportPopup.classList.remove('open');
       }}
 
-      async function exportExcel() {{
+      function exportExcel() {{
         if (!tableData.length) {{
           closeExportPopup();
           return;
         }}
 
+        if (typeof XLSX === 'undefined') {{
+          alert('Excel library load nahi hui. Please page refresh karke try karein.');
+          return;
+        }}
+
         const safeName = sanitizeFilename(exportFileNameInput.value);
-        const payload = {{
-          filename: safeName,
-          headers: exportHeaders,
-          rows: buildExportRows(),
-        }};
+        const rows = buildExportRows();
 
         confirmExportBtn.disabled = true;
         confirmExportBtn.textContent = 'Preparing...';
 
         try {{
-          const response = await fetch('/export', {{
-            method: 'POST',
-            headers: {{ 'Content-Type': 'application/json' }},
-            body: JSON.stringify(payload),
+          // Build worksheet data: header row + data rows
+          const wsData = [exportHeaders, ...rows];
+
+          // Convert values: numbers as numbers, % strings as percentages
+          const aoa = wsData.map((row, rIdx) => {{
+            return row.map((cell, cIdx) => {{
+              if (rIdx === 0) return cell; // header row - keep as string
+              if (cell === null || cell === undefined || cell === '') return '';
+              const s = String(cell).trim();
+              // Handle percentage strings like "5%" or "18%"
+              if (s.endsWith('%')) {{
+                const num = parseFloat(s);
+                if (!isNaN(num)) return num / 100;
+              }}
+              // Handle numeric strings
+              const cleaned = s.replace(/,/g, '');
+              if (cleaned !== '' && !isNaN(Number(cleaned))) return Number(cleaned);
+              return s;
+            }});
           }});
 
-          if (!response.ok) {{
-            let errMsg = `Export failed (HTTP ${{response.status}})`;
-            try {{
-              const errJson = await response.json();
-              if (errJson && errJson.error) errMsg = errJson.error;
-            }} catch (_) {{}}
-            throw new Error(errMsg);
+          const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+          const numCols = exportHeaders.length;
+          const numRows = aoa.length;
+
+          // Set column widths
+          const colWidths = exportHeaders.map((h, i) => {{
+            let max = String(h || '').length + 3;
+            rows.forEach(r => {{
+              const v = String(r[i] || '');
+              const w = i === 2 ? Math.min(Math.max(v.length + 3, 32), 80) : Math.min(Math.max(v.length + 3, 12), 28);
+              if (w > max) max = w;
+            }});
+            return {{ wch: Math.max(max, 12) }};
+          }});
+          ws['!cols'] = colWidths;
+
+          // Freeze row 1
+          ws['!freeze'] = {{ xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' }};
+
+          // Apply styles to cells (header colors + number formats)
+          const redFill   = {{ patternType: 'solid', fgColor: {{ rgb: 'FDE2E2' }} }};
+          const yellowFill = {{ patternType: 'solid', fgColor: {{ rgb: 'FFF4BF' }} }};
+          const greenFill  = {{ patternType: 'solid', fgColor: {{ rgb: 'DDF6E4' }} }};
+          const thinBorder = {{
+            top:    {{ style: 'thin', color: {{ rgb: '000000' }} }},
+            bottom: {{ style: 'thin', color: {{ rgb: '000000' }} }},
+            left:   {{ style: 'thin', color: {{ rgb: '000000' }} }},
+            right:  {{ style: 'thin', color: {{ rgb: '000000' }} }},
+          }};
+          const headerFont = {{ bold: true }};
+          const centerAlign = {{ horizontal: 'center', vertical: 'center' }};
+
+          for (let C = 0; C < numCols; C++) {{
+            const cellAddr = XLSX.utils.encode_cell({{ r: 0, c: C }});
+            if (!ws[cellAddr]) ws[cellAddr] = {{ t: 's', v: exportHeaders[C] || '' }};
+            const fill = C < 25 ? redFill : C === 25 ? yellowFill : greenFill;
+            ws[cellAddr].s = {{ fill, font: headerFont, alignment: centerAlign, border: thinBorder }};
           }}
 
-          const blob = await response.blob();
-          const downloadUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.download = `${{safeName}}.xlsx`;
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          URL.revokeObjectURL(downloadUrl);
+          // Apply number format for percentage columns and numeric data rows
+          for (let R = 1; R < numRows; R++) {{
+            for (let C = 0; C < numCols; C++) {{
+              const cellAddr = XLSX.utils.encode_cell({{ r: R, c: C }});
+              if (!ws[cellAddr]) continue;
+              const header = exportHeaders[C] || '';
+              const cell = ws[cellAddr];
+              if (cell.t === 'n') {{
+                // Check if original value was a percentage
+                const origVal = rows[R - 1][C];
+                const origStr = String(origVal || '').trim();
+                if (origStr.endsWith('%') && header.toLowerCase().includes('%')) {{
+                  cell.z = '0%';
+                }}
+              }}
+            }}
+          }}
+
+          // Write workbook
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'AJIO Export');
+
+          XLSX.writeFile(wb, safeName + '.xlsx', {{ bookType: 'xlsx', type: 'binary', cellStyles: true }});
           closeExportPopup();
-        }} catch (error) {{
-          alert('Export failed: ' + (error.message || 'Please try again.'));
+        }} catch (err) {{
+          alert('Export failed: ' + (err.message || 'Unknown error'));
         }} finally {{
           confirmExportBtn.disabled = false;
           confirmExportBtn.textContent = 'Download File';
