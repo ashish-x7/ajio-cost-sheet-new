@@ -1,0 +1,7 @@
+flask
+gunicorn
+openpyxl
+python-calamine
+xlrd
+python-dotenv
+requests
