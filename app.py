@@ -1144,6 +1144,28 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         margin: 0 12px 24px;
       }}
     }}
+    .myntra-btn {{
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3);
+      transition: all 0.3s ease;
+    }}
+    .myntra-btn:hover {{
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(225, 29, 72, 0.4);
+    }}
+    .myntra-btn svg {{
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
@@ -1152,6 +1174,22 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
     <section class="hero">
       <img src="/logo.png" class="brand-logo" alt="AJIO Logo">
       <h1>AJIO Cost calculator</h1>
+      <a href="https://myntra-cost-claculator.onrender.com" target="_blank" class="myntra-btn">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+          <line x1="8" y1="6" x2="16" y2="6"></line>
+          <line x1="16" y1="10" x2="16" y2="10"></line>
+          <line x1="12" y1="10" x2="12" y2="10"></line>
+          <line x1="8" y1="10" x2="8" y2="10"></line>
+          <line x1="16" y1="14" x2="16" y2="14"></line>
+          <line x1="12" y1="14" x2="12" y2="14"></line>
+          <line x1="8" y1="14" x2="8" y2="14"></line>
+          <line x1="16" y1="18" x2="16" y2="18"></line>
+          <line x1="12" y1="18" x2="12" y2="18"></line>
+          <line x1="8" y1="18" x2="8" y2="18"></line>
+        </svg>
+        MYNTRA
+      </a>
     </section>
     <div class="global-inputs">
       <div class="margin-input-group">
@@ -1173,12 +1211,16 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
     </div>
 
     <div class="tabs-container">
-      <button class="tab-btn" id="tab-single">Single Item Calculator</button>
-      <button class="tab-btn" id="tab-bulk">Bulk Excel Processor</button>
+      <button class="tab-btn" id="tab-single" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12.5V4a2 2 0 0 1 4 0v6.5"></path><path d="M12 10.5a2 2 0 0 1 4 0v3.5"></path><path d="M16 12.5a2 2 0 0 1 4 0v4.5a6 6 0 0 1-6 6H9.5a6 6 0 0 1-5.4-3.4l-2.6-5.2a2 2 0 0 1 3.6-1.8l2.9 5.8"></path></svg> Single Item Calculator
+      </button>
+      <button class="tab-btn" id="tab-bulk" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="2" width="7" height="8"></rect><path d="M10.5 2v3l1.5-1.5L13.5 5V2"></path><rect x="4" y="10" width="7" height="8"></rect><path d="M6 10v3l1.5-1.5L9 13v-3"></path><rect x="13" y="10" width="7" height="8"></rect><path d="M15 10v3l1.5-1.5L18 13v-3"></path><path d="M2 20h20"></path><path d="M5 20v2"></path><path d="M12 20v2"></path><path d="M19 20v2"></path><path d="M10 7h4M5.5 15h4M14.5 15h4"></path></svg> Bulk Excel Processor
+      </button>
     </div>
 
     <div id="single-container" style="display: none;">
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 0 34px 4px;">
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 0 34px 10px; align-items: center;">
         <div class="margin-input-group" style="background: var(--surface);">
           <label for="single_y_val">FINAL PURCHASE COST (Y)</label>
           <input type="number" id="single_y_val" placeholder="0" step="0.01">
@@ -1186,6 +1228,14 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         <div class="margin-input-group" style="background: var(--surface);">
           <label for="single_purchase_gst">PURCHASE GST %</label>
           <input type="number" id="single_purchase_gst" placeholder="0" step="0.01">
+        </div>
+        <div class="action-group" style="margin-left: auto; display: flex; gap: 10px;">
+          <button onclick="exportSingleItemExcel()" class="primary-btn btn-export" style="display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M2.854 2.147A1 1 0 0 0 2 3v18a1 1 0 0 0 .854.853l8 1.5A1 1 0 0 0 12 22.34V1.66a1 1 0 0 0-1.146-.987l-8 1.474ZM10 4.22v15.56l-6-1.125V5.345l6-1.125ZM22 4h-9v2h9V4Zm0 4h-9v2h9V8Zm0 4h-9v2h9v-2Zm0 4h-9v2h9v-2Zm-7-2h2v-2h-2v2Zm0-4h2V8h-2v2Zm0-4h2V4h-2v2Z"/><path d="m6.664 16 1.488-3.5h.033L9.67 16h1.25l-2.22-4.875 2.13-4.662H9.55L8.258 9.775h-.034L6.874 6.463H5.66l2.08 4.54L5.438 16h1.226Z"/></svg> Export
+          </button>
+          <button onclick="clearSingleData()" class="primary-btn btn-clear" style="display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Clear Data
+          </button>
         </div>
       </div>
       
@@ -1227,14 +1277,19 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
             </div>
           </label>
           
-          <button type="submit" class="primary-btn">Upload</button>
+          <button type="submit" class="primary-btn" style="display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Upload
+          </button>
           <a href="/sample-excel" class="sample-link">Download Sample Excel</a>
         </form>
 
         <div class="action-group">
-          <button onclick="exportToExcel()" class="primary-btn btn-export">Export</button>
-          <button onclick="openClearPopup()" class="primary-btn btn-clear">Clear Data</button>
-          <button onclick="history.back()" class="primary-btn btn-back">Back</button>
+          <button onclick="exportToExcel()" class="primary-btn btn-export" style="display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M2.854 2.147A1 1 0 0 0 2 3v18a1 1 0 0 0 .854.853l8 1.5A1 1 0 0 0 12 22.34V1.66a1 1 0 0 0-1.146-.987l-8 1.474ZM10 4.22v15.56l-6-1.125V5.345l6-1.125ZM22 4h-9v2h9V4Zm0 4h-9v2h9V8Zm0 4h-9v2h9v-2Zm0 4h-9v2h9v-2Zm-7-2h2v-2h-2v2Zm0-4h2V8h-2v2Zm0-4h2V4h-2v2Z"/><path d="m6.664 16 1.488-3.5h.033L9.67 16h1.25l-2.22-4.875 2.13-4.662H9.55L8.258 9.775h-.034L6.874 6.463H5.66l2.08 4.54L5.438 16h1.226Z"/></svg> Export
+          </button>
+          <button onclick="openClearPopup()" class="primary-btn btn-clear" style="display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Clear Data
+          </button>
         </div>
       </div>
       
@@ -1511,6 +1566,69 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
 
       if (singleYInput) singleYInput.addEventListener('input', updateSingleMode);
       if (singlePurchGstInput) singlePurchGstInput.addEventListener('input', updateSingleMode);
+
+      window.clearSingleData = () => {{
+        if (singleYInput) singleYInput.value = '';
+        if (singlePurchGstInput) singlePurchGstInput.value = '';
+        updateSingleMode();
+      }};
+
+      window.exportSingleItemExcel = async () => {{
+        if (typeof ExcelJS === 'undefined') {{
+          alert('Excel library not loaded.');
+          return;
+        }}
+        
+        const workbook = new ExcelJS.Workbook();
+        const ws = workbook.addWorksheet('Single Item');
+        
+        const dataPairs = [
+            ['FINAL PURCHASE COST (Y)', document.getElementById('single_y_val').value || '0'],
+            ['PURCHASE GST %', document.getElementById('single_purchase_gst').value || '0'],
+            ['COMPANY PROFIT MARGIN %', document.getElementById('company_margin').value || '0'],
+            ['SALE GST %', document.getElementById('gst_margin').value || '0'],
+            ['SALE DISCOUNT AMT%', document.getElementById('discount_margin').value || '0'],
+            ['AJIO MARGIN %', document.getElementById('ajio_margin').value || '0'],
+            ['', ''],
+            ['Purchase GST Amt', document.getElementById('res_purchase_gst').innerText],
+            ['Purchase TP W/O Tax', document.getElementById('res_purchase_tp').innerText],
+            ['COMPANY PROFIT MARGIN % (AA)', document.getElementById('res_AA').innerText],
+            ['SALE TP WITH TAX (AD)', document.getElementById('res_AD').innerText],
+            ['MRP (AE)', document.getElementById('res_AE').innerText],
+            ['SALE DISCOUNT AMT (AF)', document.getElementById('res_AF').innerText],
+            ['ASP (GROSS) (AG)', document.getElementById('res_AG').innerText],
+            ['GST% (AH)', document.getElementById('res_AH_pct').innerText],
+            ['GST amount (AI)', document.getElementById('res_AI').innerText],
+            ['NET SALE (AJ)', document.getElementById('res_AJ').innerText],
+            ['AJIO MARGIN 34% (AK)', document.getElementById('res_AK').innerText],
+            ['PURCHASE (AL)', document.getElementById('res_AL').innerText],
+            ['GST%2 (AM)', document.getElementById('res_AM_pct').innerText],
+            ['GST2 amount (AN)', document.getElementById('res_AN').innerText],
+            ['BANK SETTLEMENT (AO)', document.getElementById('res_AO').innerText]
+        ];
+        
+        ws.columns = [
+          {{ header: 'Description', key: 'desc', width: 35 }},
+          {{ header: 'Value', key: 'val', width: 20 }}
+        ];
+        
+        dataPairs.forEach(pair => {{
+            ws.addRow({{desc: pair[0], val: pair[1]}});
+        }});
+        
+        ws.getRow(1).font = {{ bold: true }};
+        
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {{ type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ajio_single_item_export.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }};
 
       function renderPage() {{
         if (tableData.length === 0) return;
