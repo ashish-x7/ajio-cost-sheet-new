@@ -353,818 +353,892 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
   <title>AJIO Cost calculator</title>
   <link rel="icon" type="image/png" href="/logo.png">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&display=swap');
     :root {{
-      --bg-gradient: linear-gradient(135deg, #f0f4ff 0%, #fff0f5 40%, #f0fff4 70%, #fdfcf0 100%);
-      --panel: rgba(255, 255, 255, 0.45);
-      --panel-strong: rgba(255, 255, 255, 0.65);
-      --line: rgba(255, 255, 255, 0.7);
-      --line-soft: rgba(110, 140, 255, 0.15);
-      --text: #2d3748;
-      --muted: #718096;
-      --primary: #5a67d8;
-      --primary-soft: rgba(90, 103, 216, 0.1);
-      --shadow: 0 25px 60px rgba(112, 135, 168, 0.15);
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-soft: #f1f5f9;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #000814;
+      --muted: #1e293b;
+      --muted-soft: #475569;
+      --slate: #334155;
+      --emerald: #059669;
+      --emerald-soft: #ecfdf5;
+      --rose: #e11d48;
+      --rose-soft: #fff1f2;
+      --amber: #b45309;
+      --amber-soft: #fffbeb;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 14px 32px rgba(15, 23, 42, 0.08);
+      --shadow-xl: 0 24px 70px rgba(15, 23, 42, 0.18);
     }}
     * {{ box-sizing: border-box; }}
+    html {{ background: var(--bg); }}
     body {{
       margin: 0;
-      font-family: "Calibri", "Segoe UI", sans-serif;
-      font-size: 16px;
-      background: var(--bg-gradient);
-      background-size: 400% 400%;
-      animation: iris-bg 20s ease infinite;
-      color: var(--text);
       min-height: 100vh;
-      position: relative;
       overflow-x: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.98) 260px),
+        var(--bg);
+      color: var(--text);
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
     }}
-    @keyframes iris-bg {{
-      0% {{ background-position: 0% 50%; }}
-      50% {{ background-position: 100% 50%; }}
-      100% {{ background-position: 0% 50%; }}
-    }}
-    body::before {{
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, transparent 80%);
-      z-index: -1;
-    }}
+    button, input, select, textarea {{ font: inherit; }}
     .shell {{
       width: 100%;
+      max-width: none;
       min-height: 100vh;
       margin: 0;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(30px) saturate(180%);
-      -webkit-backdrop-filter: blur(30px) saturate(180%);
-      overflow: hidden;
-      position: relative;
-    }}
-    .shell::before {{
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.3), transparent 60%);
-      pointer-events: none;
+      padding: 16px;
     }}
     .hero {{
-      padding: 34px 40px 20px;
-      border-bottom: 1px solid var(--line-soft);
-      position: relative;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
+      margin-bottom: 16px;
+      padding: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow-sm);
     }}
     .brand-logo {{
-      width: 68px;
-      height: 68px;
+      width: 54px;
+      height: 54px;
       object-fit: contain;
+      padding: 8px;
       flex-shrink: 0;
-      filter: drop-shadow(0 10px 24px rgba(35, 48, 68, 0.12));
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 18px;
     }}
     h1 {{
       margin: 0;
-      font-size: clamp(32px, 4.5vw, 56px);
-      letter-spacing: -0.05em;
-      line-height: 1.1;
-      font-weight: 400;
-      background: linear-gradient(135deg, #1e293b, #4762b4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 10px 20px rgba(71, 98, 180, 0.15));
+      color: var(--text);
+      font-size: clamp(24px, 3vw, 40px);
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -0.055em;
+      line-height: 0.95;
     }}
+    .myntra-btn {{
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 14px;
+      color: #be123c;
+      background: var(--rose-soft);
+      border: 1px solid #fecdd3;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      box-shadow: var(--shadow-sm);
+      transition: all 180ms ease;
+    }}
+    .myntra-btn:hover {{ transform: translateY(-1px); box-shadow: var(--shadow-md); }}
     form {{
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
-      padding: 24px 40px 12px;
       align-items: center;
-      position: relative;
-    }}
-    input[type="file"],
-    .margin-input-group,
-    .margin-input-group input,
-    .page-btn,
-    .tab-btn,
-    .result-card {{
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-    }}
-    .upload-zone {{
-      margin: 10px 40px 20px;
-      padding: 8px 20px;
-      background: linear-gradient(135deg, 
-        rgba(255, 182, 193, 0.15), 
-        rgba(173, 216, 230, 0.15), 
-        rgba(221, 160, 221, 0.15), 
-        rgba(240, 253, 244, 0.15)
-      );
-      background-size: 400% 400%;
-      animation: rainbow-glow 12s ease infinite;
-      border: 1px solid rgba(255, 255, 255, 0.7);
-      border-radius: 24px;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
-      box-shadow: 0 10px 30px rgba(112, 135, 168, 0.08);
-      position: relative;
-      overflow: hidden;
-    }}
-    #bulk-upload-form {{
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 16px;
-      flex: 1;
+      gap: 12px;
       margin: 0;
       padding: 0;
     }}
+    .global-inputs, .tabs-container, .upload-zone, #single-container > div:first-child {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow-sm);
+    }}
+    .global-inputs {{
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 10px;
+      width: 900px;
+      max-width: 100%;
+    }}
+    .margin-input-group {{
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 7px;
+      width: 210px;
+      min-width: 180px;
+      padding: 10px;
+      background: #ffffff !important;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow-sm);
+      transition: all 220ms ease;
+    }}
+    .margin-input-group:hover {{
+      transform: translateY(-1px);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-md);
+    }}
+    .global-inputs .margin-input-group:nth-child(1) {{
+      background: #fff1f2 !important;
+      border-color: #fecdd3;
+    }}
+    .global-inputs .margin-input-group:nth-child(1) label {{
+      color: #9f1239 !important;
+      font-weight: 400 !important;
+    }}
+    .global-inputs .margin-input-group:nth-child(1) input {{
+      border-color: #fecdd3 !important;
+    }}
+    .global-inputs .margin-input-group:nth-child(2) {{
+      background: #eff6ff !important;
+      border-color: #bfdbfe;
+    }}
+    .global-inputs .margin-input-group:nth-child(2) label {{
+      color: #1e40af !important;
+      font-weight: 400 !important;
+    }}
+    .global-inputs .margin-input-group:nth-child(2) input {{
+      border-color: #bfdbfe !important;
+    }}
+    .global-inputs .margin-input-group:nth-child(3) {{
+      background: #ecfdf5 !important;
+      border-color: #a7f3d0;
+    }}
+    .global-inputs .margin-input-group:nth-child(3) label {{
+      color: #065f46 !important;
+      font-weight: 400 !important;
+    }}
+    .global-inputs .margin-input-group:nth-child(3) input {{
+      border-color: #a7f3d0 !important;
+    }}
+    .global-inputs .margin-input-group:nth-child(4) {{
+      background: #fff7ed !important;
+      border-color: #fed7aa;
+    }}
+    .global-inputs .margin-input-group:nth-child(4) label {{
+      color: #9a3412 !important;
+      font-weight: 400 !important;
+    }}
+    .global-inputs .margin-input-group:nth-child(4) input {{
+      border-color: #fed7aa !important;
+    }}
+    #single-container > div:first-child .margin-input-group:nth-child(1) {{
+      background: #fefce8 !important;
+      border-color: #fde68a;
+    }}
+    #single-container > div:first-child .margin-input-group:nth-child(1) label {{
+      color: #854d0e !important;
+      font-weight: 400 !important;
+    }}
+    #single-container > div:first-child .margin-input-group:nth-child(1) input {{
+      border-color: #fde68a !important;
+    }}
+    #single-container > div:first-child .margin-input-group:nth-child(2) {{
+      background: #faf5ff !important;
+      border-color: #e9d5ff;
+    }}
+    #single-container > div:first-child .margin-input-group:nth-child(2) label {{
+      color: #6b21a8 !important;
+      font-weight: 400 !important;
+    }}
+    #single-container > div:first-child .margin-input-group:nth-child(2) input {{
+      border-color: #e9d5ff !important;
+    }}
+    .margin-input-group label, .toggle-label, #pagination-controls label, #pagination-controls span {{
+      color: var(--muted) !important;
+      font-size: 9px !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.13em !important;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }}
+    .margin-input-group input, #export-file-name, .bot-input-area input, select {{
+      width: 100%;
+      min-height: 36px;
+      padding: 7px 10px !important;
+      color: var(--text) !important;
+      background: #ffffff !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 14px !important;
+      outline: none;
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      box-shadow: var(--shadow-sm) !important;
+      transition: all 180ms ease;
+    }}
+    .margin-input-group input:focus, #export-file-name:focus, .bot-input-area input:focus, select:focus {{
+      border-color: #94a3b8 !important;
+      box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25) !important;
+    }}
+    .margin-input-group input::placeholder, #export-file-name::placeholder, .bot-input-area input::placeholder {{
+      color: var(--muted-soft);
+    }}
+    .tabs-container {{
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px;
+      width: fit-content;
+      max-width: 100%;
+    }}
+    .tab-btn {{
+      flex: 0 0 auto;
+      min-height: 34px;
+      padding: 0 14px !important;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 16px;
+      box-shadow: none;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: all 180ms ease;
+    }}
+    .tab-btn:hover {{
+      color: var(--text);
+      background: var(--surface-soft);
+      transform: translateY(-1px);
+    }}
+    .tab-btn.active {{
+      color: #ffffff;
+      background: var(--slate);
+      border-color: var(--slate);
+      box-shadow: 0 10px 24px rgba(51, 65, 85, 0.22);
+    }}
+    #single-container > div:first-child {{
+      margin-bottom: 16px;
+      padding: 14px !important;
+    }}
     .action-group {{
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 10px;
     }}
-    .file-info {{
-      margin: -10px 40px 15px;
-      font-size: 13px;
-      font-weight: 400;
-      color: #4762b4;
-      background: rgba(255, 255, 255, 0.5);
-      padding: 5px 15px;
-      border-radius: 12px;
-      display: inline-block;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.8);
+    button {{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #ffffff;
+      color: var(--text);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 180ms ease;
+    }}
+    button:hover {{ transform: translateY(-1px); box-shadow: var(--shadow-md); }}
+    button:disabled {{ opacity: 0.55; cursor: not-allowed; transform: none; }}
+    .primary-btn {{
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 7px !important;
+      min-height: 42px !important;
+      padding: 0 16px !important;
+      color: #ffffff !important;
+      background: var(--slate) !important;
+      border: 1px solid var(--slate) !important;
+      border-radius: 14px !important;
+      font-size: 11px !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      white-space: nowrap;
+      box-shadow: 0 10px 22px rgba(51, 65, 85, 0.18) !important;
+    }}
+    .primary-btn:hover {{ box-shadow: var(--shadow-md) !important; }}
+    .btn-export {{
+      color: #047857 !important;
+      background: var(--emerald-soft) !important;
+      border-color: #a7f3d0 !important;
+      box-shadow: var(--shadow-sm) !important;
+    }}
+    .btn-clear {{
+      color: var(--rose) !important;
+      background: var(--rose-soft) !important;
+      border-color: #fecdd3 !important;
+      box-shadow: var(--shadow-sm) !important;
+    }}
+    .btn-back {{
+      color: var(--muted) !important;
+      background: var(--surface-soft) !important;
+      border-color: var(--border) !important;
+      box-shadow: var(--shadow-sm) !important;
+    }}
+    .upload-zone {{
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 16px;
+      padding: 10px;
+      width: fit-content;
+      max-width: calc(100vw - 32px);
+    }}
+    #bulk-upload-form {{
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      min-width: 0;
+      max-width: 100%;
     }}
     .file-input-wrapper {{
       position: relative;
-      flex: 1;
-      max-width: none;
+      flex: 0 0 auto;
+      width: 210px;
+      min-width: 180px;
+      max-width: 260px !important;
     }}
     #bulk-file-input {{
       position: absolute;
-      width: 0.1px;
-      height: 0.1px;
+      width: 1px;
+      height: 1px;
       opacity: 0;
       overflow: hidden;
       z-index: -1;
     }}
     .file-label {{
       display: flex;
-      flex-direction: row;
       align-items: center;
-      justify-content: flex-start;
-      padding: 10px 18px;
-      background: rgba(255, 255, 255, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.8);
+      gap: 10px;
+      min-height: 36px;
+      width: 100%;
+      padding: 6px 12px !important;
+      color: var(--text);
+      background: #ffffff;
+      border: 1px dashed var(--border-strong);
       border-radius: 14px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      gap: 12px;
-      box-shadow: 0 4px 15px rgba(112, 135, 168, 0.05);
-      width: 100%;
+      box-shadow: var(--shadow-sm);
+      transition: all 180ms ease;
     }}
     .file-label:hover {{
-      background: white;
-      box-shadow: 0 8px 25px rgba(110, 140, 255, 0.12);
+      border-color: #94a3b8;
+      background: #f8fafc;
     }}
-    .file-label .icon {{
-      font-size: 20px;
-      margin-bottom: 0;
-      filter: drop-shadow(0 4px 8px rgba(110, 140, 255, 0.2));
-    }}
+    .file-label .icon {{ font-size: 15px; line-height: 1; }}
     .file-label .text {{
-      font-weight: 400;
-      color: #4762b4;
-      font-size: 14px;
-      white-space: nowrap;
-    }}
-    .file-label .file-name {{
-      margin-top: 0;
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 400;
-      background: var(--primary-soft);
-      padding: 4px 10px;
-      border-radius: 8px;
-      max-width: 300px;
+      min-width: 0;
       overflow: hidden;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
       text-overflow: ellipsis;
       white-space: nowrap;
     }}
-    .primary-btn {{
-      background: linear-gradient(135deg, #6e8cff, #8ba3ff) !important;
-      color: white !important;
-      padding: 10px 24px !important;
-      font-size: 16px !important;
-      font-weight: 400 !important;
-      border: none !important;
-      border-radius: 14px !important;
-      box-shadow: 0 8px 20px rgba(110, 140, 255, 0.3) !important;
-      cursor: pointer;
-      transition: all 0.3s ease !important;
-      white-space: nowrap;
-    }}
-    .primary-btn:hover {{
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(110, 140, 255, 0.4) !important;
-    }}
-    .btn-export {{
-      background: linear-gradient(135deg, #4ade80, #22c55e) !important;
-      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3) !important;
-    }}
-    .btn-export:hover {{
-      box-shadow: 0 12px 30px rgba(34, 197, 94, 0.4) !important;
-    }}
-    .btn-clear {{
-      background: linear-gradient(135deg, #fb7185, #e11d48) !important;
-      box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3) !important;
-    }}
-    .btn-clear:hover {{
-      box-shadow: 0 12px 30px rgba(225, 29, 72, 0.4) !important;
-    }}
-    .btn-back {{
-      background: linear-gradient(135deg, #94a3b8, #64748b) !important;
-      box-shadow: 0 8px 20px rgba(100, 116, 139, 0.2) !important;
-    }}
-    .btn-back:hover {{
-      box-shadow: 0 12px 30px rgba(100, 116, 139, 0.3) !important;
-    }}
-    .primary-btn:active {{
-      transform: translateY(-1px);
-    }}
-    button {{
-      border: 1px solid rgba(255,255,255,0.82);
-      border-radius: 14px;
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.48), rgba(255,255,255,0.18)),
-        linear-gradient(135deg, rgba(110,140,255,0.24), rgba(255,186,218,0.16));
-      color: var(--text);
-      padding: 11px 16px;
-      font-size: 13px;
-      font-weight: 400;
-      cursor: pointer;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), 0 16px 36px rgba(110, 140, 255, 0.16);
-      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-    }}
-    button:hover {{
-      transform: translateY(-2px);
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.54), rgba(255,255,255,0.24)),
-        linear-gradient(135deg, rgba(110,140,255,0.3), rgba(255,186,218,0.2));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.84), 0 20px 44px rgba(110, 140, 255, 0.22);
-      border-color: rgba(110, 140, 255, 0.42);
-    }}
-    .controls-bar {{
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 40px 20px;
-      gap: 16px;
-    }}
-    .message {{
-      margin: 0;
-      color: #425f81;
-      font-weight: 400;
-      flex: 1;
-      padding: 14px 16px;
-      min-height: 20px;
-      background: rgba(255,255,255,0.38);
-      border: 1px solid rgba(255,255,255,0.82);
-      border-radius: 18px;
-      box-shadow: 0 14px 34px rgba(112, 135, 168, 0.1);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }}
-    .margin-input-group {{
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.45);
-      padding: 10px 16px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 15px 35px rgba(112, 135, 168, 0.08);
-      transition: all 0.3s ease;
-    }}
     .sample-link {{
-      font-size: 13px;
-      color: #6e8cff;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
       text-decoration: none;
-      border-bottom: 1px dashed #6e8cff;
-      margin-left: 5px;
-      transition: all 0.3s ease;
-      display: inline-block;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-strong);
+      transition: all 180ms ease;
     }}
-    .sample-link:hover {{
-      color: #5a67d8;
-      border-bottom-style: solid;
-      transform: translateY(-1px);
-    }}
-
-    .margin-input-group:hover {{
-      transform: translateY(-2px);
-      background: rgba(255, 255, 255, 0.65);
-      box-shadow: 0 20px 45px rgba(112, 135, 168, 0.12);
-    }}
-    .margin-input-group label {{
-      font-size: 14px;
-      font-weight: 400;
-      color: #4762b4;
-      letter-spacing: 0.02em;
-    }}
-    .margin-input-group input {{
-      width: 80px;
-      padding: 8px 12px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 400;
-      background: white;
-      color: #1e293b;
-      transition: all 0.3s ease;
-    }}
-    .margin-input-group input:focus {{
-      border-color: #6e8cff;
-      outline: none;
-      box-shadow: 0 0 0 4px rgba(110, 140, 255, 0.1);
-    }}
-      text-align: right;
-      background: linear-gradient(135deg, rgba(110,140,255,0.14), rgba(255,255,255,0.72));
-      color: #4762b4;
-      font-weight: 400;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), 0 0 0 1px rgba(110,140,255,0.08);
-      transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
-    }}
-    .margin-input-group input:hover,
-    .margin-input-group input:focus {{
-      border-color: rgba(110, 140, 255, 0.48);
-      background: linear-gradient(135deg, rgba(110,140,255,0.18), rgba(255,255,255,0.85));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.88), 0 0 0 3px rgba(110,140,255,0.12);
-      outline: none;
-    }}
-    .margin-input-group input::placeholder {{
-      color: #6d7fcc;
-      opacity: 1;
-    }}
-    .page-btn {{
-      border-radius: 14px;
-      background: rgba(255,255,255,0.4);
-      color: var(--text);
-      font-weight: 400;
-      padding: 8px 14px;
-      font-size: 13px;
-    }}
-    .page-btn:disabled {{
-      opacity: 0.45;
-      cursor: not-allowed;
-    }}
-    .export-btn {{
-      white-space: nowrap;
-    }}
+    .sample-link:hover {{ color: var(--text); border-color: var(--text); }}
     .toggle-container {{
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 10px;
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.45);
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.8);
+      min-height: 36px;
+      padding: 6px 10px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-sm);
       cursor: pointer;
       user-select: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(112, 135, 168, 0.05);
     }}
-    .toggle-container:hover {{
-      background: rgba(255, 255, 255, 0.65);
-      transform: translateY(-1px);
-    }}
-    .toggle-label {{
-      font-size: 13px;
-      font-weight: 400;
-      color: #4762b4;
-    }}
-    .switch {{
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 22px;
-    }}
-    .switch input {{
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }}
+    .switch {{ position: relative; display: inline-block; width: 42px; height: 24px; flex: 0 0 auto; }}
+    .switch input {{ width: 0; height: 0; opacity: 0; }}
     .slider {{
       position: absolute;
-      cursor: pointer;
       inset: 0;
-      background-color: #cbd5e1;
-      transition: .4s;
-      border-radius: 34px;
+      background: #cbd5e1;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 180ms ease;
     }}
     .slider:before {{
-      position: absolute;
       content: "";
-      height: 16px;
-      width: 16px;
+      position: absolute;
+      width: 18px;
+      height: 18px;
       left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      top: 3px;
+      background: #ffffff;
+      border-radius: 999px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+      transition: all 180ms ease;
     }}
-    input:checked + .slider {{
-      background: linear-gradient(135deg, #6e8cff, #8ba3ff);
+    input:checked + .slider {{ background: #10b981; }}
+    input:checked + .slider:before {{ transform: translateX(18px); }}
+    .file-info {{
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      margin: 0 0 14px;
+      padding: 8px 12px;
+      color: var(--emerald);
+      background: var(--emerald-soft);
+      border: 1px solid #a7f3d0;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 800;
     }}
-    input:checked + .slider:before {{
-      transform: translateX(22px);
+    .single-results-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      padding: 0 0 24px;
+    }}
+    .result-card {{
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 92px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: all 220ms ease;
+    }}
+    .result-card:hover {{
+      transform: scale(1.01);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-md);
+    }}
+    .result-card h4 {{
+      margin: 0;
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+      line-height: 1.35;
+      text-transform: uppercase;
+    }}
+    .result-card p {{
+      margin: 0;
+      color: var(--text);
+      font-size: 24px;
+      font-style: italic;
+      font-weight: 900;
+      letter-spacing: -0.055em;
+      line-height: 0.95;
+      text-align: right;
+    }}
+    .highlight-card {{
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border-color: #a7f3d0;
+      box-shadow: 0 16px 38px rgba(5, 150, 105, 0.09);
+    }}
+    .highlight-card p {{ color: var(--emerald); }}
+    .single-results-grid .result-card:nth-child(1),
+    .single-results-grid .result-card:nth-child(2),
+    .single-results-grid .result-card:nth-child(12) {{
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }}
+    .single-results-grid .result-card:nth-child(1) h4,
+    .single-results-grid .result-card:nth-child(2) h4,
+    .single-results-grid .result-card:nth-child(12) h4 {{
+      color: #1e40af !important;
+    }}
+    .single-results-grid .result-card:nth-child(3),
+    .single-results-grid .result-card:nth-child(11),
+    .single-results-grid .result-card:nth-child(15) {{
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+    }}
+    .single-results-grid .result-card:nth-child(3) h4,
+    .single-results-grid .result-card:nth-child(11) h4,
+    .single-results-grid .result-card:nth-child(15) h4 {{
+      color: #065f46 !important;
+    }}
+    .single-results-grid .result-card:nth-child(4),
+    .single-results-grid .result-card:nth-child(5),
+    .single-results-grid .result-card:nth-child(7),
+    .single-results-grid .result-card:nth-child(10) {{
+      background: #fff7ed;
+      border-color: #fed7aa;
+    }}
+    .single-results-grid .result-card:nth-child(4) h4,
+    .single-results-grid .result-card:nth-child(5) h4,
+    .single-results-grid .result-card:nth-child(7) h4,
+    .single-results-grid .result-card:nth-child(10) h4 {{
+      color: #9a3412 !important;
+    }}
+    .single-results-grid .result-card:nth-child(6) {{
+      background: #fff1f2;
+      border-color: #fecdd3;
+    }}
+    .single-results-grid .result-card:nth-child(6) h4 {{
+      color: #9f1239 !important;
+    }}
+    .single-results-grid .result-card:nth-child(8),
+    .single-results-grid .result-card:nth-child(9),
+    .single-results-grid .result-card:nth-child(13),
+    .single-results-grid .result-card:nth-child(14) {{
+      background: #eef2ff;
+      border-color: #c7d2fe;
+    }}
+    .single-results-grid .result-card:nth-child(8) h4,
+    .single-results-grid .result-card:nth-child(9) h4,
+    .single-results-grid .result-card:nth-child(13) h4,
+    .single-results-grid .result-card:nth-child(14) h4 {{
+      color: #3730a3 !important;
     }}
     .table-wrap {{
-      overflow: auto;
-      margin: 0;
       width: 100%;
-      background: transparent;
-      border: none;
+      max-width: 100%;
+      min-width: 0;
+      overflow: auto;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow-sm);
+    }}
+    .table-wrap .table-wrap {{
+      border: 0;
       border-radius: 0;
       box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
     }}
     table {{
       width: 100%;
-      min-width: 1200px;
-      border-collapse: collapse;
-      background: transparent;
-      border-radius: 18px;
-      overflow: hidden;
+      min-width: 1260px;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: #ffffff;
     }}
     th, td {{
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(124, 145, 180, 0.12);
-      border-right: 1px solid rgba(124, 145, 180, 0.08);
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid #f1f5f9;
       text-align: left;
       vertical-align: top;
       white-space: nowrap;
-      font-size: 15px;
     }}
     th {{
       position: sticky;
       top: 0;
-      background: rgba(240, 247, 255, 0.8) !important;
-      z-index: 1;
-      color: #4762b4;
-      font-weight: 400;
-      font-size: 13px;
-      letter-spacing: 0.05em;
+      z-index: 2;
+      color: var(--muted);
+      background: #f8fafc;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+      line-height: 1.35;
       text-transform: uppercase;
-      border-bottom: 2px solid rgba(110, 140, 255, 0.15);
     }}
-    tr:nth-child(even) td {{
-      background: rgba(255, 255, 255, 0.1);
+    td {{
+      color: #334155;
+      font-size: 12px;
+      font-weight: 600;
     }}
-    tbody tr:hover td {{
-      background: rgba(255, 255, 255, 0.3);
-    }}
+    tbody tr:hover td {{ background: #f8fafc; }}
     .empty {{
+      padding: 40px;
       color: var(--muted);
       text-align: center;
-      padding: 28px;
-    }}
-    .tabs-container {{
-      display: flex;
-      gap: 12px;
-      padding: 0 40px 20px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid var(--line-soft);
-    }}
-    .tab-btn {{
-      padding: 10px 16px;
-      color: var(--muted);
-      font-weight: 400;
-      font-size: 15px;
-      cursor: pointer;
-      border-radius: 14px;
-      box-shadow: none;
-    }}
-    .tab-btn.active {{
-      color: white;
-      background: linear-gradient(135deg, #6e8cff, #8ba3ff);
-      box-shadow: 0 10px 25px rgba(110, 140, 255, 0.3);
-      border: none;
-    }}
-    .global-inputs {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding: 0 40px 20px;
-    }}
-    .single-results-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 12px;
-      padding: 12px 40px 40px;
-    }}
-    .result-card {{
-      background: rgba(255, 255, 255, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      border-radius: 20px;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      box-shadow: 0 10px 30px rgba(112, 135, 168, 0.05);
-      transition: all 0.3s ease;
-    }}
-    .result-card:hover {{
-      transform: translateY(-3px);
-      background: rgba(255, 255, 255, 0.6);
-      box-shadow: 0 15px 40px rgba(112, 135, 168, 0.1);
-    }}
-    .result-card h4 {{
-      margin: 0;
       font-size: 12px;
-      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 0.09em;
-      line-height: 1.4;
-      text-align: left;
-      max-width: 70%;
-      font-weight: 400;
     }}
-    .result-card p {{
-      margin: 0;
-      font-size: 18px;
-      font-weight: 400;
+    #pagination-controls {{
+      background: #ffffff !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 18px !important;
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: none !important;
+    }}
+    .page-btn {{
+      min-height: 36px;
+      padding: 0 14px !important;
       color: var(--text);
-      flex-shrink: 0;
-      text-align: right;
-    }}
-    .highlight-card {{
-      background: linear-gradient(135deg, rgba(255,255,255,0.42), rgba(110,140,255,0.08));
-      border: 1px solid rgba(110, 140, 255, 0.24);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px !important;
+      font-size: 10px;
+      font-weight: 900 !important;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }}
     .popup-backdrop {{
       position: fixed;
       inset: 0;
-      background: rgba(245, 249, 255, 0.52);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      z-index: 50;
       display: none;
       align-items: center;
       justify-content: center;
       padding: 16px;
-      z-index: 50;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }}
-    .popup-backdrop.open {{
-      display: flex;
-    }}
+    .popup-backdrop.open {{ display: flex; }}
     .popup-card {{
-      width: min(480px, 95%);
-      background: linear-gradient(135deg, #f1f6ff 0%, #ffffff 100%);
-      border: 1px solid rgba(110, 140, 255, 0.25);
-      border-radius: 32px;
-      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.2);
-      padding: 40px;
-      position: relative;
-      overflow: hidden;
+      width: min(420px, 100%);
+      padding: 24px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow-xl);
+      animation: modal-in 150ms ease both;
     }}
-    .popup-card::before {{
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 6px;
-      background: linear-gradient(90deg, #6e8cff, #8ba3ff, #4ade80, #fb7185);
+    @keyframes modal-in {{
+      from {{ opacity: 0; transform: scale(0.95) translateY(6px); }}
+      to {{ opacity: 1; transform: scale(1) translateY(0); }}
     }}
     .popup-card h3 {{
-      font-size: 26px !important;
-      font-weight: 400 !important;
-      margin-bottom: 14px !important;
-      color: #1e293b !important;
+      margin: 0 0 8px !important;
+      color: var(--text) !important;
+      font-size: 18px !important;
+      font-weight: 900 !important;
       letter-spacing: -0.03em !important;
-      margin-top: 0;
     }}
     .popup-card p {{
-      color: #64748b !important;
-      font-size: 16px !important;
+      margin: 0 0 18px !important;
+      color: var(--muted) !important;
+      font-size: 13px !important;
       line-height: 1.6 !important;
-      margin-bottom: 28px !important;
     }}
-    #export-file-name {{
-      width: 100%;
-      padding: 16px 22px !important;
-      border-radius: 18px !important;
-      border: 2px solid #cbd5e1 !important;
-      background: #ffffff !important;
-      font-size: 16px !important;
-      font-weight: 400 !important;
-      color: #1e293b !important;
-      margin-bottom: 30px !important;
-      transition: all 0.3s ease !important;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
-      box-sizing: border-box;
-    }}
-    #export-file-name:focus {{
-      border-color: #6e8cff !important;
-      background: white !important;
-      outline: none !important;
-      box-shadow: 0 0 0 4px rgba(110, 140, 255, 0.15) !important;
-    }}
+    #export-file-name {{ margin-bottom: 16px !important; }}
     .popup-actions {{
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
+      gap: 10px;
       margin-top: 18px;
     }}
-
-    /* Chatbot Styles */
     .bot-trigger {{
       position: fixed;
-      bottom: 30px;
-      right: 30px;
-      width: 70px;
-      height: 70px;
+      right: 24px;
+      bottom: 24px;
       z-index: 2000;
+      width: 58px;
+      height: 58px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
       cursor: pointer;
-      animation: bot-float 3s ease-in-out infinite;
-      filter: drop-shadow(0 10px 20px rgba(71, 98, 180, 0.25));
+      transition: all 220ms ease;
     }}
-    @keyframes bot-float {{
-      0%, 100% {{ transform: translateY(0) rotate(0deg); }}
-      50% {{ transform: translateY(-10px) rotate(5deg); }}
-    }}
-    .bot-trigger img {{
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }}
+    .bot-trigger:hover {{ transform: translateY(-2px) scale(1.03); box-shadow: none; }}
+    .bot-trigger img {{ width: 100%; height: 100%; object-fit: contain; }}
     .bot-bubble {{
       position: fixed;
-      bottom: 110px;
-      right: 35px;
-      background: rgba(255, 255, 255, 0.95);
-      border: 2px solid rgba(110, 140, 255, 0.3);
-      border-radius: 18px 18px 0 18px;
-      padding: 12px 18px;
-      max-width: 200px;
-      font-size: 13px;
-      font-weight: 400;
-      color: #4762b4;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      right: 28px;
+      bottom: 98px;
       z-index: 2000;
+      max-width: 230px;
+      padding: 11px 13px;
+      color: var(--text);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px 16px 4px 16px;
+      box-shadow: var(--shadow-md);
+      font-size: 12px;
+      font-weight: 700;
       opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       pointer-events: none;
-      backdrop-filter: blur(10px);
+      transform: translateY(12px);
+      transition: all 220ms ease;
     }}
-    .bot-bubble.show {{
-      opacity: 1;
-      transform: translateY(0);
-    }}
+    .bot-bubble.show {{ opacity: 1; transform: translateY(0); }}
     .bot-window {{
       position: fixed;
-      bottom: 110px;
-      right: 30px;
-      width: 380px;
-      height: 550px;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 244, 0.96));
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      border-radius: 30px;
-      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+      right: 24px;
+      bottom: 98px;
       z-index: 1999;
       display: flex;
       flex-direction: column;
+      width: min(380px, calc(100vw - 32px));
+      height: min(550px, calc(100vh - 130px));
       overflow: hidden;
-      transform: scale(0.9) translateY(40px);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow-xl);
       opacity: 0;
       visibility: hidden;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      backdrop-filter: blur(25px);
+      transform: scale(0.96) translateY(16px);
+      transition: all 220ms ease;
     }}
-    .bot-window.open {{
-      opacity: 1;
-      visibility: visible;
-      transform: scale(1) translateY(0);
-    }}
+    .bot-window.open {{ opacity: 1; visibility: visible; transform: scale(1) translateY(0); }}
     .bot-header {{
-      padding: 20px;
-      background: linear-gradient(90deg, #4ade80, #6e8cff, #fb7185);
-      color: white;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 16px;
+      color: var(--text);
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
     }}
     .bot-header h3 {{
       margin: 0;
-      font-size: 16px;
-      font-weight: 400;
-      letter-spacing: -0.02em;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
     }}
     .bot-messages {{
       flex: 1;
-      padding: 20px;
-      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.2);
+      gap: 10px;
+      overflow-y: auto;
+      padding: 16px;
+      background: #ffffff;
     }}
     .msg {{
-      max-width: 80%;
-      padding: 10px 14px;
+      max-width: 84%;
+      padding: 10px 12px;
       border-radius: 16px;
-      font-size: 16px;
-      line-height: 1.5;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.45;
     }}
     .msg.bot {{
       align-self: flex-start;
-      background: white;
-      color: #1e293b;
-      border-bottom-left-radius: 4px;
-      box-shadow: 0 4px 10px rgba(112, 135, 168, 0.08);
-      border: 1px solid rgba(110, 140, 255, 0.1);
+      color: var(--text);
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 5px;
     }}
     .msg.user {{
       align-self: flex-end;
-      background: linear-gradient(135deg, #6e8cff, #8ba3ff);
-      color: white;
-      border-bottom-right-radius: 4px;
-      box-shadow: 0 4px 12px rgba(110, 140, 255, 0.2);
+      color: #ffffff;
+      background: var(--slate);
+      border-bottom-right-radius: 5px;
     }}
     .bot-input-area {{
-      padding: 16px;
       display: flex;
       gap: 8px;
-      background: white;
-      border-top: 1px solid rgba(124, 145, 180, 0.1);
-    }}
-    .bot-input-area input {{
-      flex: 1;
-      padding: 10px 16px;
-      border: 2px solid #f1f5f9;
-      border-radius: 12px;
-      font-size: 14px;
-      outline: none;
-      transition: all 0.3s ease;
-    }}
-    .bot-input-area input:focus {{
-      border-color: #6e8cff;
+      padding: 12px;
+      background: #ffffff;
+      border-top: 1px solid var(--border);
     }}
     .send-btn {{
-      background: linear-gradient(135deg, #4ade80, #22c55e);
-      color: white;
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      width: 40px;
+      min-width: 40px;
+      height: 40px;
+      color: #ffffff;
+      background: var(--slate);
+      border: 1px solid var(--slate);
+      border-radius: 12px;
+      font-size: 16px;
     }}
-    @media (max-width: 720px) {{
-      .hero, form, .global-inputs, .controls-bar, .tabs-container, .single-results-grid {{
-        padding-left: 20px;
-        padding-right: 20px;
-      }}
-      .table-wrap {{
-        margin: 0 12px 24px;
-      }}
+    @media (max-width: 980px) {{
+      .upload-zone {{ width: fit-content; }}
+      .action-group {{ width: auto; }}
     }}
-    .myntra-btn {{
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(135deg, #f43f5e, #e11d48);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 14px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 15px;
-      box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3);
-      transition: all 0.3s ease;
+    @media (max-width: 640px) {{
+      .shell {{ padding: 12px; }}
+      .hero {{ align-items: flex-start; flex-wrap: wrap; border-radius: 20px; }}
+      .myntra-btn {{ width: 100%; margin-left: 0; }}
+      .global-inputs {{ width: 460px; max-width: 100%; }}
+      .margin-input-group {{ width: 210px; max-width: calc(100vw - 44px); }}
+      .tabs-container {{ flex-direction: column; }}
+      .single-results-grid {{ grid-template-columns: 1fr; }}
+      .popup-actions {{ flex-direction: column-reverse; }}
+      .popup-actions .primary-btn {{ width: 100%; }}
     }}
-    .myntra-btn:hover {{
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(225, 29, 72, 0.4);
+    body, body * {{
+      font-style: normal !important;
+      font-weight: 400 !important;
+      letter-spacing: 0 !important;
     }}
-    .myntra-btn svg {{
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    body .primary-btn,
+    body .tab-btn,
+    body .toggle-label,
+    body #pagination-controls label,
+    body #pagination-controls span,
+    body .file-label .text,
+    body .sample-link,
+    body .result-card h4,
+    body th,
+    body td,
+    body .page-btn,
+    body .popup-card h3,
+    body .bot-header h3,
+    body .msg,
+    body .myntra-btn {{
+      font-style: normal !important;
+      font-weight: 400 !important;
+      letter-spacing: 0 !important;
+    }}
+    body .margin-input-group input,
+    body #export-file-name,
+    body .bot-input-area input,
+    body select {{
+      font-style: normal !important;
+      font-weight: 400 !important;
+      letter-spacing: 0 !important;
+    }}
+    body #single-container .margin-input-group label {{
+      font-style: normal !important;
+      font-weight: 400 !important;
+      letter-spacing: 0 !important;
+    }}
+    body,
+    body h1,
+    body input,
+    body select,
+    body textarea,
+    body .tab-btn:not(.active),
+    body .margin-input-group label,
+    body .toggle-label,
+    body #pagination-controls label,
+    body #pagination-controls span,
+    body .file-label,
+    body .file-label .text,
+    body .sample-link,
+    body .result-card h4,
+    body .result-card p,
+    body th,
+    body td,
+    body .empty,
+    body .popup-card p,
+    body .bot-bubble,
+    body .msg.bot {{
+      color: #000814 !important;
+    }}
+    body input::placeholder,
+    body textarea::placeholder {{
+      color: #475569 !important;
+      opacity: 1;
+    }}
+    h1 {{
+      font-size: clamp(26px, 3vw, 42px) !important;
+      line-height: 1.1 !important;
+    }}
+    .result-card p {{
+      font-size: 24px !important;
+      line-height: 1.1 !important;
     }}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
@@ -1339,6 +1413,16 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
     </div>
   </div>
 
+  <div class="popup-backdrop" id="notice-popup">
+    <div class="popup-card">
+      <h3 id="notice-title">Notice</h3>
+      <p id="notice-message"></p>
+      <div class="popup-actions">
+        <button type="button" id="notice-close" class="primary-btn btn-back">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="popup-backdrop" id="export-popup">
     <div class="popup-card">
       <h3>Export Excel</h3>
@@ -1402,6 +1486,26 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
       const clearPopup = document.getElementById('clear-popup');
       const cancelClearBtn = document.getElementById('cancel-clear');
       const confirmClearBtn = document.getElementById('confirm-clear');
+      const noticePopup = document.getElementById('notice-popup');
+      const noticeTitle = document.getElementById('notice-title');
+      const noticeMessage = document.getElementById('notice-message');
+      const noticeClose = document.getElementById('notice-close');
+
+      function showNotice(message, title = 'Notice') {{
+        if (!noticePopup || !noticeTitle || !noticeMessage) return;
+        noticeTitle.textContent = title;
+        noticeMessage.textContent = message;
+        noticePopup.classList.add('open');
+      }}
+
+      if (noticeClose) {{
+        noticeClose.addEventListener('click', () => noticePopup.classList.remove('open'));
+      }}
+      if (noticePopup) {{
+        noticePopup.addEventListener('click', (event) => {{
+          if (event.target === noticePopup) noticePopup.classList.remove('open');
+        }});
+      }}
       
       let currentPage = 1;
       let pageSize = 50;
@@ -1575,48 +1679,151 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
 
       window.exportSingleItemExcel = async () => {{
         if (typeof ExcelJS === 'undefined') {{
-          alert('Excel library not loaded.');
+          showNotice('Excel library not loaded.', 'Export unavailable');
           return;
         }}
         
         const workbook = new ExcelJS.Workbook();
-        const ws = workbook.addWorksheet('Single Item');
-        
-        const dataPairs = [
-            ['FINAL PURCHASE COST (Y)', document.getElementById('single_y_val').value || '0'],
-            ['PURCHASE GST %', document.getElementById('single_purchase_gst').value || '0'],
-            ['COMPANY PROFIT MARGIN %', document.getElementById('company_margin').value || '0'],
-            ['SALE GST %', document.getElementById('gst_margin').value || '0'],
-            ['SALE DISCOUNT AMT%', document.getElementById('discount_margin').value || '0'],
-            ['AJIO MARGIN %', document.getElementById('ajio_margin').value || '0'],
-            ['', ''],
-            ['Purchase GST Amt', document.getElementById('res_purchase_gst').innerText],
-            ['Purchase TP W/O Tax', document.getElementById('res_purchase_tp').innerText],
-            ['COMPANY PROFIT MARGIN % (AA)', document.getElementById('res_AA').innerText],
-            ['SALE TP WITH TAX (AD)', document.getElementById('res_AD').innerText],
-            ['MRP (AE)', document.getElementById('res_AE').innerText],
-            ['SALE DISCOUNT AMT (AF)', document.getElementById('res_AF').innerText],
-            ['ASP (GROSS) (AG)', document.getElementById('res_AG').innerText],
-            ['GST% (AH)', document.getElementById('res_AH_pct').innerText],
-            ['GST amount (AI)', document.getElementById('res_AI').innerText],
-            ['NET SALE (AJ)', document.getElementById('res_AJ').innerText],
-            ['AJIO MARGIN 34% (AK)', document.getElementById('res_AK').innerText],
-            ['PURCHASE (AL)', document.getElementById('res_AL').innerText],
-            ['GST%2 (AM)', document.getElementById('res_AM_pct').innerText],
-            ['GST2 amount (AN)', document.getElementById('res_AN').innerText],
-            ['BANK SETTLEMENT (AO)', document.getElementById('res_AO').innerText]
-        ];
-        
-        ws.columns = [
-          {{ header: 'Description', key: 'desc', width: 35 }},
-          {{ header: 'Value', key: 'val', width: 20 }}
-        ];
-        
-        dataPairs.forEach(pair => {{
-            ws.addRow({{desc: pair[0], val: pair[1]}});
+        workbook.creator = 'AJIO Cost Calculator';
+        workbook.created = new Date();
+
+        const ws = workbook.addWorksheet('Single Item Dashboard', {{
+          views: [{{ showGridLines: false }}]
         }});
-        
-        ws.getRow(1).font = {{ bold: true }};
+
+        ws.columns = [
+          {{ width: 18 }}, {{ width: 14 }}, {{ width: 3 }},
+          {{ width: 18 }}, {{ width: 14 }}, {{ width: 3 }},
+          {{ width: 18 }}, {{ width: 14 }}, {{ width: 3 }},
+          {{ width: 18 }}, {{ width: 14 }}
+        ];
+
+        const palettes = {{
+          yellow: {{ fill: 'FFFEFCE8', border: 'FFFDE68A', accent: 'FF854D0E' }},
+          purple: {{ fill: 'FFFAF5FF', border: 'FFE9D5FF', accent: 'FF6B21A8' }},
+          rose: {{ fill: 'FFFFF1F2', border: 'FFFECDD3', accent: 'FF9F1239' }},
+          blue: {{ fill: 'FFEFF6FF', border: 'FFBFDBFE', accent: 'FF1E40AF' }},
+          green: {{ fill: 'FFECFDF5', border: 'FFA7F3D0', accent: 'FF065F46' }},
+          orange: {{ fill: 'FFFFF7ED', border: 'FFFED7AA', accent: 'FF9A3412' }},
+          indigo: {{ fill: 'FFEEF2FF', border: 'FFC7D2FE', accent: 'FF3730A3' }}
+        }};
+
+        const dark = 'FF000814';
+        const lightBorder = 'FFE2E8F0';
+        const sectionFill = 'FFF8FAFC';
+
+        function applyBox(row, col, label, value, theme) {{
+          const palette = palettes[theme] || palettes.blue;
+          ws.mergeCells(row, col, row, col + 1);
+          ws.mergeCells(row + 1, col, row + 2, col + 1);
+
+          for (let r = row; r <= row + 2; r++) {{
+            for (let c = col; c <= col + 1; c++) {{
+              const cell = ws.getCell(r, c);
+              cell.fill = {{ type: 'pattern', pattern: 'solid', fgColor: {{ argb: palette.fill }} }};
+              cell.border = {{
+                top: {{ style: 'thin', color: {{ argb: palette.border }} }},
+                left: {{ style: 'thin', color: {{ argb: palette.border }} }},
+                bottom: {{ style: 'thin', color: {{ argb: palette.border }} }},
+                right: {{ style: 'thin', color: {{ argb: palette.border }} }}
+              }};
+            }}
+          }}
+
+          const labelCell = ws.getCell(row, col);
+          labelCell.value = label;
+          labelCell.font = {{ name: 'Calibri', size: 9, bold: false, color: {{ argb: palette.accent }} }};
+          labelCell.alignment = {{ vertical: 'middle', horizontal: 'left', wrapText: true }};
+
+          const valueCell = ws.getCell(row + 1, col);
+          valueCell.value = value;
+          valueCell.font = {{ name: 'Calibri', size: 18, bold: false, color: {{ argb: dark }} }};
+          valueCell.alignment = {{ vertical: 'middle', horizontal: 'right' }};
+        }}
+
+        function sectionTitle(row, title) {{
+          ws.mergeCells(row, 1, row, 11);
+          const cell = ws.getCell(row, 1);
+          cell.value = title;
+          cell.font = {{ name: 'Calibri', size: 12, bold: false, color: {{ argb: dark }} }};
+          cell.fill = {{ type: 'pattern', pattern: 'solid', fgColor: {{ argb: sectionFill }} }};
+          cell.border = {{
+            top: {{ style: 'thin', color: {{ argb: lightBorder }} }},
+            left: {{ style: 'thin', color: {{ argb: lightBorder }} }},
+            bottom: {{ style: 'thin', color: {{ argb: lightBorder }} }},
+            right: {{ style: 'thin', color: {{ argb: lightBorder }} }}
+          }};
+          cell.alignment = {{ vertical: 'middle', horizontal: 'left' }};
+        }}
+
+        ws.mergeCells(1, 2, 1, 11);
+        ws.getCell(1, 2).value = 'AJIO Cost Calculator';
+        ws.getCell(1, 2).font = {{ name: 'Calibri', size: 22, bold: false, color: {{ argb: dark }} }};
+        ws.getCell(1, 2).alignment = {{ vertical: 'middle', horizontal: 'left' }};
+        ws.getRow(1).height = 42;
+
+        try {{
+          const logoResponse = await fetch('/logo.png');
+          const logoBuffer = await logoResponse.arrayBuffer();
+          const logoId = workbook.addImage({{ buffer: logoBuffer, extension: 'png' }});
+          ws.addImage(logoId, {{
+            tl: {{ col: 0.15, row: 0.12 }},
+            ext: {{ width: 38, height: 38 }}
+          }});
+        }} catch (err) {{
+          console.warn('Logo could not be added to export:', err);
+        }}
+
+        sectionTitle(3, 'Input Summary');
+        const inputCards = [
+          {{ label: 'FINAL PURCHASE COST (Y)', value: document.getElementById('single_y_val').value || '0', theme: 'yellow' }},
+          {{ label: 'PURCHASE GST %', value: document.getElementById('single_purchase_gst').value || '0', theme: 'purple' }},
+          {{ label: 'COMPANY PROFIT MARGIN %', value: document.getElementById('company_margin').value || '0', theme: 'rose' }},
+          {{ label: 'SALE GST %', value: document.getElementById('gst_margin').value || '0', theme: 'blue' }},
+          {{ label: 'SALE DISCOUNT AMT%', value: document.getElementById('discount_margin').value || '0', theme: 'green' }},
+          {{ label: 'AJIO MARGIN %', value: document.getElementById('ajio_margin').value || '0', theme: 'orange' }}
+        ];
+
+        const cardColumns = [1, 4, 7, 10];
+        inputCards.forEach((card, index) => {{
+          const row = index < 4 ? 5 : 9;
+          const col = cardColumns[index % 4];
+          applyBox(row, col, card.label, card.value, card.theme);
+        }});
+
+        sectionTitle(13, 'Calculated Results');
+        const resultCards = [
+          {{ label: 'Purchase GST Amt', value: document.getElementById('res_purchase_gst').innerText, theme: 'blue' }},
+          {{ label: 'Purchase TP W/O Tax', value: document.getElementById('res_purchase_tp').innerText, theme: 'blue' }},
+          {{ label: 'COMPANY PROFIT MARGIN % (AA)', value: document.getElementById('res_AA').innerText, theme: 'green' }},
+          {{ label: 'SALE TP WITH TAX (AD)', value: document.getElementById('res_AD').innerText, theme: 'orange' }},
+          {{ label: 'MRP (AE)', value: document.getElementById('res_AE').innerText, theme: 'orange' }},
+          {{ label: 'SALE DISCOUNT AMT (AF)', value: document.getElementById('res_AF').innerText, theme: 'rose' }},
+          {{ label: 'ASP (GROSS) (AG)', value: document.getElementById('res_AG').innerText, theme: 'orange' }},
+          {{ label: 'GST% (AH)', value: document.getElementById('res_AH_pct').innerText, theme: 'indigo' }},
+          {{ label: 'GST amount (AI)', value: document.getElementById('res_AI').innerText, theme: 'indigo' }},
+          {{ label: 'NET SALE (AJ)', value: document.getElementById('res_AJ').innerText, theme: 'orange' }},
+          {{ label: 'AJIO MARGIN 34% (AK)', value: document.getElementById('res_AK').innerText, theme: 'green' }},
+          {{ label: 'PURCHASE (AL)', value: document.getElementById('res_AL').innerText, theme: 'blue' }},
+          {{ label: 'GST%2 (AM)', value: document.getElementById('res_AM_pct').innerText, theme: 'indigo' }},
+          {{ label: 'GST2 amount (AN)', value: document.getElementById('res_AN').innerText, theme: 'indigo' }},
+          {{ label: 'BANK SETTLEMENT (AO)', value: document.getElementById('res_AO').innerText, theme: 'green' }}
+        ];
+
+        resultCards.forEach((card, index) => {{
+          const row = 15 + Math.floor(index / 4) * 4;
+          const col = cardColumns[index % 4];
+          applyBox(row, col, card.label, card.value, card.theme);
+        }});
+
+        for (let r = 1; r <= 30; r++) {{
+          if (!ws.getRow(r).height) ws.getRow(r).height = 18;
+        }}
+        [5, 9, 15, 19, 23, 27].forEach((row) => {{
+          ws.getRow(row).height = 20;
+          ws.getRow(row + 1).height = 20;
+          ws.getRow(row + 2).height = 20;
+        }});
         
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {{ type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }});
@@ -1809,7 +2016,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
 
       function openExportPopup() {{
         if (!tableData.length) {{
-          alert('Please upload Excel file first to export data.');
+          showNotice('Please upload Excel file first to export data.', 'Upload required');
           return;
         }}
         exportFileNameInput.value = 'ajio_bulk_export';
@@ -1829,7 +2036,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         }}
 
         if (typeof ExcelJS === 'undefined') {{
-          alert('Excel library load nahi hui. Please page refresh karke try karein.');
+          showNotice('Excel library load nahi hui. Please page refresh karke try karein.', 'Export unavailable');
           return;
         }}
 
@@ -1951,7 +2158,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
 
         }} catch (err) {{
           console.error(err);
-          alert('Export failed: ' + (err.message || 'Unknown error'));
+          showNotice('Export failed: ' + (err.message || 'Unknown error'), 'Export failed');
         }} finally {{
           confirmExportBtn.disabled = false;
           confirmExportBtn.textContent = 'Download File';
