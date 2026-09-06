@@ -1860,7 +1860,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
           {{ label: 'Purchase TP W/O Tax', value: {{ formula: 'ROUND(A6-A16,2)', result: resPurchTp }}, theme: 'blue', numFmt: '#,##0.00' }},
           {{ label: 'COMPANY PROFIT MARGIN % (AA)', value: {{ formula: 'ROUND((A6*G6)/100,2)', result: resAA }}, theme: 'green', numFmt: '#,##0.00' }},
           {{ label: 'SALE TP WITH TAX (AD)', value: {{ formula: 'ROUND(A6+G16,2)', result: resAD }}, theme: 'orange', numFmt: '#,##0.00' }},
-          {{ label: 'MRP (AE)', value: {{ formula: singleAeFormula, result: resAE }}, theme: 'orange', numFmt: '#,##0' }},
+          {{ label: 'MRP (AE)', value: resAE, theme: 'orange', numFmt: '#,##0' }},
           {{ label: 'SALE DISCOUNT AMT (AF)', value: {{ formula: 'ROUND((A20*A10)/100,0)', result: resAF }}, theme: 'rose', numFmt: '#,##0' }},
           {{ label: 'ASP (GROSS) (AG)', value: {{ formula: 'A20-D20', result: resAG }}, theme: 'orange', numFmt: '#,##0' }},
           {{ label: 'GST% (AH)', value: {{ formula: 'IF(G20>2499,0.18,0.05)', result: resAHNum }}, theme: 'indigo', numFmt: '0%' }},
@@ -2237,15 +2237,9 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
               }};
               abCell.numFmt = '#,##0.00';
 
-              // Col AE (31): MRP
+              // Col AE (31): MRP (pure number from GoalSeek, no formula)
               const aeCell = addedRow.getCell(31);
-              const aeFormula = (K1 > 0 && K2 > 0 && K3 > 0)
-                ? 'IF(OR(AD' + R + '="",AD' + R + '<=0),"",ROUND(IF(AD' + R + '<=' + T1 + ',AD' + R + '/' + K1.toFixed(8) + ',IF(AD' + R + '<=' + T2 + ',AD' + R + '/' + K2.toFixed(8) + ',AD' + R + '/' + K3.toFixed(8) + ')),0))'
-                : 'IF(OR(AD' + R + '="",AD' + R + '<=0),"",ROUND(AD' + R + '/0.22505,0))';
-              aeCell.value = {{
-                formula: aeFormula,
-                result: Math.round(aeRaw)
-              }};
+              aeCell.value = aeRaw > 0 ? Math.round(aeRaw) : '';
               aeCell.numFmt = '#,##0';
 
               // Col AF (32): SALE DISCOUNT AMT
