@@ -232,6 +232,8 @@ def coerce_export_cell(value: object) -> object:
         text = ILLEGAL_CHARACTERS_RE.sub("", value).strip()
         if not text:
             return ""
+        if text.startswith("="):
+            return text
         cleaned = text.replace(",", "")
         is_percent = cleaned.endswith("%")
         if is_percent:
@@ -1566,11 +1568,35 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         return cleaned || 'ajio_bulk_export';
       }}
 
-      function calculateAE_raw(targetAD) {{
+      function calculateSettlementFromMRP(mrp, discount, ajio) {{
+        const discountAmt = Math.round((mrp * discount) / 100);
+        const aspGross = mrp - discountAmt;
+        const gstPct = aspGross > 2499 ? 0.18 : 0.05;
+        const gstAmt = aspGross - (aspGross / (1 + gstPct));
+        const ajioMarginAmt = Math.round(((aspGross * ajio) / 100) * 100) / 100;
+        
+        const purchase = aspGross - gstAmt - ajioMarginAmt;
+        const gst2Pct = purchase > 2499 ? 0.18 : 0.05;
+        const gst2Amt = purchase * gst2Pct;
+        return purchase + gst2Amt;
+      }}
+
+      function calculateAE_raw(targetAD, discount, ajio) {{
         if (targetAD <= 0) return 0;
-        if (targetAD <= 1606) return targetAD / 0.22505;
-        if (targetAD <= 2620) return targetAD / 0.186490678;
-        return targetAD / 0.209579661;
+        const d = (typeof discount === 'number' && !isNaN(discount)) ? discount : (parseFloat(discountInput ? discountInput.value.trim() : '') || 65);
+        const m = (typeof ajio === 'number' && !isNaN(ajio)) ? ajio : (parseFloat(ajioInput ? ajioInput.value.trim() : '') || 34);
+
+        let low = 0;
+        let high = targetAD * 30;
+        for (let i = 0; i < 60; i++) {{
+          const mid = (low + high) / 2;
+          if (calculateSettlementFromMRP(mid, d, m) < targetAD) {{
+            low = mid;
+          }} else {{
+            high = mid;
+          }}
+        }}
+        return (low + high) / 2;
       }}
 
       const tabSingle = document.getElementById('tab-single');
@@ -1631,8 +1657,8 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         const valAA = Math.round(((yValue * margin) / 100) * 100) / 100;
         const valAD = Math.round((yValue + valAA) * 100) / 100;
         
-        // New direct formula for MRP (Raw decimal for precision)
-        const valAE_raw = calculateAE_raw(valAD);
+        // GoalSeek solver for MRP
+        const valAE_raw = calculateAE_raw(valAD, discount, ajio);
         
         // Final calculations based on RAW MRP for precision
         const valAF_raw = (valAE_raw * discount) / 100;
@@ -1712,7 +1738,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         const lightBorder = 'FFE2E8F0';
         const sectionFill = 'FFF8FAFC';
 
-        function applyBox(row, col, label, value, theme) {{
+        function applyBox(row, col, label, value, theme, numFmt) {{
           const palette = palettes[theme] || palettes.blue;
           ws.mergeCells(row, col, row, col + 1);
           ws.mergeCells(row + 1, col, row + 2, col + 1);
@@ -1737,6 +1763,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
 
           const valueCell = ws.getCell(row + 1, col);
           valueCell.value = value;
+          if (numFmt) valueCell.numFmt = numFmt;
           valueCell.font = {{ name: 'Calibri', size: 18, bold: false, color: {{ argb: dark }} }};
           valueCell.alignment = {{ vertical: 'middle', horizontal: 'right' }};
         }}
@@ -1775,45 +1802,81 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
         }}
 
         sectionTitle(3, 'Input Summary');
+        const singleY = parseFloat(document.getElementById('single_y_val')?.value) || 0;
+        const singlePurchGst = parseFloat(document.getElementById('single_purchase_gst')?.value) || 0;
+        const compMargin = parseFloat(document.getElementById('company_margin')?.value) || 0;
+        const saleGst = parseFloat(document.getElementById('gst_margin')?.value) || 0;
+        const saleDiscount = parseFloat(document.getElementById('discount_margin')?.value) || 0;
+        const ajioMargin = parseFloat(document.getElementById('ajio_margin')?.value) || 0;
+
         const inputCards = [
-          {{ label: 'FINAL PURCHASE COST (Y)', value: document.getElementById('single_y_val').value || '0', theme: 'yellow' }},
-          {{ label: 'PURCHASE GST %', value: document.getElementById('single_purchase_gst').value || '0', theme: 'purple' }},
-          {{ label: 'COMPANY PROFIT MARGIN %', value: document.getElementById('company_margin').value || '0', theme: 'rose' }},
-          {{ label: 'SALE GST %', value: document.getElementById('gst_margin').value || '0', theme: 'blue' }},
-          {{ label: 'SALE DISCOUNT AMT%', value: document.getElementById('discount_margin').value || '0', theme: 'green' }},
-          {{ label: 'AJIO MARGIN %', value: document.getElementById('ajio_margin').value || '0', theme: 'orange' }}
+          {{ label: 'FINAL PURCHASE COST (Y)', value: singleY, theme: 'yellow', numFmt: '#,##0.00' }},
+          {{ label: 'PURCHASE GST %', value: singlePurchGst, theme: 'purple', numFmt: '0.00' }},
+          {{ label: 'COMPANY PROFIT MARGIN %', value: compMargin, theme: 'rose', numFmt: '0.00' }},
+          {{ label: 'SALE GST %', value: saleGst, theme: 'blue', numFmt: '0.00' }},
+          {{ label: 'SALE DISCOUNT AMT%', value: saleDiscount, theme: 'green', numFmt: '0.00' }},
+          {{ label: 'AJIO MARGIN %', value: ajioMargin, theme: 'orange', numFmt: '0.00' }}
         ];
 
         const cardColumns = [1, 4, 7, 10];
         inputCards.forEach((card, index) => {{
           const row = index < 4 ? 5 : 9;
           const col = cardColumns[index % 4];
-          applyBox(row, col, card.label, card.value, card.theme);
+          applyBox(row, col, card.label, card.value, card.theme, card.numFmt);
         }});
 
         sectionTitle(13, 'Calculated Results');
+        const resPurchGst = parseFloat(document.getElementById('res_purchase_gst')?.innerText) || 0;
+        const resPurchTp = parseFloat(document.getElementById('res_purchase_tp')?.innerText) || 0;
+        const resAA = parseFloat(document.getElementById('res_AA')?.innerText) || 0;
+        const resAD = parseFloat(document.getElementById('res_AD')?.innerText) || 0;
+        const resAE = parseFloat(document.getElementById('res_AE')?.innerText) || 0;
+        const resAF = parseFloat(document.getElementById('res_AF')?.innerText) || 0;
+        const resAG = parseFloat(document.getElementById('res_AG')?.innerText) || 0;
+        const resAHText = document.getElementById('res_AH_pct')?.innerText || '5%';
+        const resAHNum = resAHText.includes('18') ? 0.18 : 0.05;
+        const resAI = parseFloat(document.getElementById('res_AI')?.innerText) || 0;
+        const resAJ = parseFloat(document.getElementById('res_AJ')?.innerText) || 0;
+        const resAK = parseFloat(document.getElementById('res_AK')?.innerText) || 0;
+        const resAL = parseFloat(document.getElementById('res_AL')?.innerText) || 0;
+        const resAMText = document.getElementById('res_AM_pct')?.innerText || '5%';
+        const resAMNum = resAMText.includes('18') ? 0.18 : 0.05;
+        const resAN = parseFloat(document.getElementById('res_AN')?.innerText) || 0;
+        const resAO = parseFloat(document.getElementById('res_AO')?.innerText) || 0;
+
+        const singleD = saleDiscount / 100;
+        const singleM = ajioMargin / 100;
+        const singleT1 = Math.round((2499 * (1 - singleM * 1.05)) * 100) / 100;
+        const singleT2 = 2623.95;
+        const singleK1 = (1 - singleD) * (1 - singleM * 1.05);
+        const singleK2 = (1 - singleD) * (1 / 1.18 - singleM) * 1.05;
+        const singleK3 = (1 - singleD) * (1 - singleM * 1.18);
+        const singleAeFormula = (singleK1 > 0 && singleK2 > 0 && singleK3 > 0)
+          ? 'IF(J16<=0,0,ROUND(IF(J16<=' + singleT1 + ',J16/' + singleK1.toFixed(8) + ',IF(J16<=' + singleT2 + ',J16/' + singleK2.toFixed(8) + ',J16/' + singleK3.toFixed(8) + ')),0))'
+          : 'IF(J16<=0,0,ROUND(J16/0.22505,0))';
+
         const resultCards = [
-          {{ label: 'Purchase GST Amt', value: document.getElementById('res_purchase_gst').innerText, theme: 'blue' }},
-          {{ label: 'Purchase TP W/O Tax', value: document.getElementById('res_purchase_tp').innerText, theme: 'blue' }},
-          {{ label: 'COMPANY PROFIT MARGIN % (AA)', value: document.getElementById('res_AA').innerText, theme: 'green' }},
-          {{ label: 'SALE TP WITH TAX (AD)', value: document.getElementById('res_AD').innerText, theme: 'orange' }},
-          {{ label: 'MRP (AE)', value: document.getElementById('res_AE').innerText, theme: 'orange' }},
-          {{ label: 'SALE DISCOUNT AMT (AF)', value: document.getElementById('res_AF').innerText, theme: 'rose' }},
-          {{ label: 'ASP (GROSS) (AG)', value: document.getElementById('res_AG').innerText, theme: 'orange' }},
-          {{ label: 'GST% (AH)', value: document.getElementById('res_AH_pct').innerText, theme: 'indigo' }},
-          {{ label: 'GST amount (AI)', value: document.getElementById('res_AI').innerText, theme: 'indigo' }},
-          {{ label: 'NET SALE (AJ)', value: document.getElementById('res_AJ').innerText, theme: 'orange' }},
-          {{ label: 'AJIO MARGIN 34% (AK)', value: document.getElementById('res_AK').innerText, theme: 'green' }},
-          {{ label: 'PURCHASE (AL)', value: document.getElementById('res_AL').innerText, theme: 'blue' }},
-          {{ label: 'GST%2 (AM)', value: document.getElementById('res_AM_pct').innerText, theme: 'indigo' }},
-          {{ label: 'GST2 amount (AN)', value: document.getElementById('res_AN').innerText, theme: 'indigo' }},
-          {{ label: 'BANK SETTLEMENT (AO)', value: document.getElementById('res_AO').innerText, theme: 'green' }}
+          {{ label: 'Purchase GST Amt', value: {{ formula: 'ROUND((A6*D6)/(100+D6),2)', result: resPurchGst }}, theme: 'blue', numFmt: '#,##0.00' }},
+          {{ label: 'Purchase TP W/O Tax', value: {{ formula: 'ROUND(A6-A16,2)', result: resPurchTp }}, theme: 'blue', numFmt: '#,##0.00' }},
+          {{ label: 'COMPANY PROFIT MARGIN % (AA)', value: {{ formula: 'ROUND((A6*G6)/100,2)', result: resAA }}, theme: 'green', numFmt: '#,##0.00' }},
+          {{ label: 'SALE TP WITH TAX (AD)', value: {{ formula: 'ROUND(A6+G16,2)', result: resAD }}, theme: 'orange', numFmt: '#,##0.00' }},
+          {{ label: 'MRP (AE)', value: {{ formula: singleAeFormula, result: resAE }}, theme: 'orange', numFmt: '#,##0' }},
+          {{ label: 'SALE DISCOUNT AMT (AF)', value: {{ formula: 'ROUND((A20*A10)/100,0)', result: resAF }}, theme: 'rose', numFmt: '#,##0' }},
+          {{ label: 'ASP (GROSS) (AG)', value: {{ formula: 'A20-D20', result: resAG }}, theme: 'orange', numFmt: '#,##0' }},
+          {{ label: 'GST% (AH)', value: {{ formula: 'IF(G20>2499,0.18,0.05)', result: resAHNum }}, theme: 'indigo', numFmt: '0%' }},
+          {{ label: 'GST amount (AI)', value: {{ formula: 'ROUND(G20-(G20/(1+J20)),2)', result: resAI }}, theme: 'indigo', numFmt: '#,##0.00' }},
+          {{ label: 'NET SALE (AJ)', value: {{ formula: 'ROUND(G20-A24,2)', result: resAJ }}, theme: 'orange', numFmt: '#,##0.00' }},
+          {{ label: 'AJIO MARGIN 34% (AK)', value: {{ formula: 'ROUND((G20*D10)/100,2)', result: resAK }}, theme: 'green', numFmt: '#,##0.00' }},
+          {{ label: 'PURCHASE (AL)', value: {{ formula: 'ROUND(G20-A24-G24,2)', result: resAL }}, theme: 'blue', numFmt: '#,##0.00' }},
+          {{ label: 'GST%2 (AM)', value: {{ formula: 'IF(J24>2499,0.18,0.05)', result: resAMNum }}, theme: 'indigo', numFmt: '0%' }},
+          {{ label: 'GST2 amount (AN)', value: {{ formula: 'ROUND(J24*A28,2)', result: resAN }}, theme: 'indigo', numFmt: '#,##0.00' }},
+          {{ label: 'BANK SETTLEMENT (AO)', value: {{ formula: 'ROUND(J24+D28,2)', result: resAO }}, theme: 'green', numFmt: '#,##0.00' }}
         ];
 
         resultCards.forEach((card, index) => {{
           const row = 15 + Math.floor(index / 4) * 4;
           const col = cardColumns[index % 4];
-          applyBox(row, col, card.label, card.value, card.theme);
+          applyBox(row, col, card.label, card.value, card.theme, card.numFmt);
         }});
 
         for (let r = 1; r <= 30; r++) {{
@@ -1897,7 +1960,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
 
           let aeRaw = 0;
           if (acValue > 0) {{
-            aeRaw = calculateAE_raw(acValue);
+            aeRaw = calculateAE_raw(acValue, discount, ajio);
           }}
           
           const afRaw = (aeRaw * discount) / 100;
@@ -1978,7 +2041,7 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
 
           let aeRaw = 0;
           if (acValue > 0) {{
-            aeRaw = calculateAE_raw(acValue);
+            aeRaw = calculateAE_raw(acValue, discount, ajio);
           }}
 
           const afRaw = (aeRaw * discount) / 100;
@@ -2056,8 +2119,33 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
           // ── 2. Add header row ──
           ws.addRow(exportHeaders);
 
-          // ── 3. Add data rows with clean numeric values ──
-          rows.forEach(row => {{
+          const marginStr = marginInput ? marginInput.value.trim() : '';
+          const margin = parseFloat(marginStr) || 0;
+          const isMarginValid = !isNaN(parseFloat(marginStr));
+
+          const gstStr = gstInput ? gstInput.value.trim() : '';
+          const gst = parseFloat(gstStr) || 0;
+          const isGstValid = !isNaN(parseFloat(gstStr));
+
+          const discountStr = discountInput ? discountInput.value.trim() : '';
+          const discount = parseFloat(discountStr) || 0;
+          const isDiscountValid = !isNaN(parseFloat(discountStr));
+
+          const ajioStr = ajioInput ? ajioInput.value.trim() : '';
+          const ajio = parseFloat(ajioStr) || 0;
+          const isAjioValid = !isNaN(parseFloat(ajioStr));
+
+          const D = discount / 100;
+          const M = ajio / 100;
+          const T1 = Math.round((2499 * (1 - M * 1.05)) * 100) / 100;
+          const T2 = 2623.95;
+          const K1 = (1 - D) * (1 - M * 1.05);
+          const K2 = (1 - D) * (1 / 1.18 - M) * 1.05;
+          const K3 = (1 - D) * (1 - M * 1.18);
+
+          // ── 3. Add data rows with dynamic formulas & clean numeric values ──
+          rows.forEach((row, rowIndex) => {{
+            const R = rowIndex + 2;
             const processedRow = row.map(cell => {{
               if (cell === null || cell === undefined || cell === '') return '';
               const s = String(cell).trim();
@@ -2069,7 +2157,177 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
               if (cleaned !== '' && !isNaN(Number(cleaned))) return Number(cleaned);
               return s;
             }});
-            ws.addRow(processedRow);
+            const addedRow = ws.addRow(processedRow);
+
+            const yRaw = String(row[24] || '').replace(/,/g, '').trim();
+            const hasY = yRaw !== '' && !isNaN(Number(yRaw));
+
+            // Purchase side formulas (Tax V = col 22, Purchase Cost W = col 23, Purchase Tax X = col 24, Y = col 25)
+            const vRaw = String(row[21] || '').trim();
+            if (hasY && vRaw !== '') {{
+              const xCell = addedRow.getCell(24);
+              const xNum = parseFloat(String(row[23] || '').replace(/,/g, ''));
+              xCell.value = {{
+                formula: 'IF(OR(Y' + R + '="",V' + R + '=""),"",ROUND(IF(V' + R + '<1,(Y' + R + '*V' + R + ')/(1+V' + R + '),(Y' + R + '*V' + R + ')/(100+V' + R + ')),2))',
+                result: isNaN(xNum) ? undefined : xNum
+              }};
+              xCell.numFmt = '#,##0.00';
+
+              const wCell = addedRow.getCell(23);
+              const wNum = parseFloat(String(row[22] || '').replace(/,/g, ''));
+              wCell.value = {{
+                formula: 'IF(Y' + R + '="","",ROUND(Y' + R + '-X' + R + ',2))',
+                result: isNaN(wNum) ? undefined : wNum
+              }};
+              wCell.numFmt = '#,##0.00';
+            }}
+
+            // Sales side formulas (Cols AA=27 to AO=41)
+            if (hasY && (isMarginValid || isGstValid || isDiscountValid || isAjioValid)) {{
+              const yVal = Number(yRaw);
+              const profitNum = isMarginValid ? Math.round(((yVal * margin) / 100) * 100) / 100 : 0;
+              const acNum = yVal + profitNum;
+              const abNum = isGstValid ? Math.round(((acNum * gst) / (100 + gst)) * 100) / 100 : 0;
+              const aaNum = acNum - abNum;
+
+              let aeRaw = 0;
+              if (acNum > 0) {{
+                aeRaw = calculateAE_raw(acNum, discount, ajio);
+              }}
+              const afRaw = (aeRaw * discount) / 100;
+              const agRaw = aeRaw - afRaw;
+              const ahPctVal = agRaw > 2499 ? 0.18 : 0.05;
+              const ahValue = agRaw - (agRaw / (1 + ahPctVal));
+              const aiValue = agRaw - ahValue;
+              const ajValue = (agRaw * ajio) / 100;
+              const akValue = agRaw - ahValue - ajValue;
+              const alPctVal = akValue > 2499 ? 0.18 : 0.05;
+              const amValue = akValue * alPctVal;
+              const anValue = akValue + amValue;
+
+              // Col AA (27): COMPANY PROFIT MARGIN %
+              const aaCell = addedRow.getCell(27);
+              aaCell.value = {{
+                formula: 'IF(Y' + R + '="","",ROUND((Y' + R + '*' + margin + ')/100,2))',
+                result: profitNum
+              }};
+              aaCell.numFmt = '#,##0.00';
+
+              // Col AD (30): SALE TP WITH TAX
+              const adCell = addedRow.getCell(30);
+              adCell.value = {{
+                formula: 'IF(Y' + R + '="","",ROUND(Y' + R + '+AA' + R + ',2))',
+                result: acNum
+              }};
+              adCell.numFmt = '#,##0.00';
+
+              // Col AC (29): GST%
+              const acCell = addedRow.getCell(29);
+              acCell.value = {{
+                formula: 'IF(AD' + R + '="","",ROUND((AD' + R + '*' + gst + ')/(100+' + gst + '),2))',
+                result: abNum
+              }};
+              acCell.numFmt = '#,##0.00';
+
+              // Col AB (28): SALE TP WITH OUT TAX
+              const abCell = addedRow.getCell(28);
+              abCell.value = {{
+                formula: 'IF(AD' + R + '="","",ROUND(AD' + R + '-AC' + R + ',2))',
+                result: aaNum
+              }};
+              abCell.numFmt = '#,##0.00';
+
+              // Col AE (31): MRP
+              const aeCell = addedRow.getCell(31);
+              const aeFormula = (K1 > 0 && K2 > 0 && K3 > 0)
+                ? 'IF(OR(AD' + R + '="",AD' + R + '<=0),"",ROUND(IF(AD' + R + '<=' + T1 + ',AD' + R + '/' + K1.toFixed(8) + ',IF(AD' + R + '<=' + T2 + ',AD' + R + '/' + K2.toFixed(8) + ',AD' + R + '/' + K3.toFixed(8) + ')),0))'
+                : 'IF(OR(AD' + R + '="",AD' + R + '<=0),"",ROUND(AD' + R + '/0.22505,0))';
+              aeCell.value = {{
+                formula: aeFormula,
+                result: Math.round(aeRaw)
+              }};
+              aeCell.numFmt = '#,##0';
+
+              // Col AF (32): SALE DISCOUNT AMT
+              const afCell = addedRow.getCell(32);
+              afCell.value = {{
+                formula: 'IF(AE' + R + '="","",ROUND((AE' + R + '*' + discount + ')/100,0))',
+                result: Math.round(afRaw)
+              }};
+              afCell.numFmt = '#,##0';
+
+              // Col AG (33): ASP (GROSS)
+              const agCell = addedRow.getCell(33);
+              agCell.value = {{
+                formula: 'IF(AE' + R + '="","",AE' + R + '-AF' + R + ')',
+                result: Math.round(agRaw)
+              }};
+              agCell.numFmt = '#,##0';
+
+              // Col AH (34): GST%
+              const ahCell = addedRow.getCell(34);
+              ahCell.value = {{
+                formula: 'IF(AG' + R + '="","",IF(AG' + R + '>2499,0.18,0.05))',
+                result: ahPctVal
+              }};
+              ahCell.numFmt = '0%';
+
+              // Col AI (35): GST amount
+              const aiCell = addedRow.getCell(35);
+              aiCell.value = {{
+                formula: 'IF(AG' + R + '="","",ROUND(AG' + R + '-(AG' + R + '/(1+AH' + R + ')),2))',
+                result: Math.round(ahValue * 100) / 100
+              }};
+              aiCell.numFmt = '#,##0.00';
+
+              // Col AJ (36): NET SALE
+              const ajCell = addedRow.getCell(36);
+              ajCell.value = {{
+                formula: 'IF(AG' + R + '="","",ROUND(AG' + R + '-AI' + R + ',2))',
+                result: Math.round(aiValue * 100) / 100
+              }};
+              ajCell.numFmt = '#,##0.00';
+
+              // Col AK (37): AJIO MARGIN 34%
+              const akCell = addedRow.getCell(37);
+              akCell.value = {{
+                formula: 'IF(AG' + R + '="","",ROUND((AG' + R + '*' + ajio + ')/100,2))',
+                result: Math.round(ajValue * 100) / 100
+              }};
+              akCell.numFmt = '#,##0.00';
+
+              // Col AL (38): PURCHASE
+              const alCell = addedRow.getCell(38);
+              alCell.value = {{
+                formula: 'IF(AG' + R + '="","",ROUND(AG' + R + '-AI' + R + '-AK' + R + ',2))',
+                result: Math.round(akValue * 100) / 100
+              }};
+              alCell.numFmt = '#,##0.00';
+
+              // Col AM (39): GST%2
+              const amCell = addedRow.getCell(39);
+              amCell.value = {{
+                formula: 'IF(AL' + R + '="","",IF(AL' + R + '>2499,0.18,0.05))',
+                result: alPctVal
+              }};
+              amCell.numFmt = '0%';
+
+              // Col AN (40): GST2 amount
+              const anCell = addedRow.getCell(40);
+              anCell.value = {{
+                formula: 'IF(AL' + R + '="","",ROUND(AL' + R + '*AM' + R + ',2))',
+                result: Math.round(amValue * 100) / 100
+              }};
+              anCell.numFmt = '#,##0.00';
+
+              // Col AO (41): BANK SETTLEMENT
+              const aoCell = addedRow.getCell(41);
+              aoCell.value = {{
+                formula: 'IF(AL' + R + '="","",ROUND(AL' + R + '+AN' + R + ',2))',
+                result: Math.round(anValue * 100) / 100
+              }};
+              aoCell.numFmt = '#,##0.00';
+            }}
           }});
 
           // ── 4. Set column widths ──
@@ -2134,6 +2392,10 @@ def render_page(table_html: str = "", message: str = "", default_tab: str = "aut
             const dataRow = ws.getRow(R);
             for (let C = 1; C <= exportHeaders.length; C++) {{
               const cell = dataRow.getCell(C);
+              if (C === 34 || C === 39) {{
+                cell.numFmt = '0%';
+                continue;
+              }}
               const origVal = rows[R - 2][C - 1];
               const origStr = String(origVal || '').trim();
               if (origStr.endsWith('%')) {{
